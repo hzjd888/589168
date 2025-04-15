@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<!-- saved from url=(0088)https://b0f9709f-1526-4d3b-825e-0546011d92fb-%2D1744448400-%2De89c097d.app.yourware.app/ -->
+<html lang="zh-CN"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI绘图魔法师</title>
+    <link rel="stylesheet" href="./all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com/">
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+    <link href="./css2" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #7F5AF0; /* 梦幻紫 */
+            --primary-dark: #6B47D6; /* 深梦幻紫 */
+            --secondary: #2CB67D; /* 宝石绿 */
+            --accent: #FF8906; /* 明亮橙 */
+            --light: #FFFFFE; /* 纯白 */
+            --dark: #16161A; /* 深空黑 */
+            --gray-dark: #242629; /* 暗灰 */
+            --gray-light: #94A1B2; /* 淡灰 */
+            --error: #EF4565; /* 警告红 */
+            --success: #2CB67D; /* 成功绿 */
+            --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 10px 15px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 25px rgba(0, 0, 0, 0.15);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 24px;
+            --radius-xl: 32px;
+            --radius-full: 9999px;
+            --transition: all 0.35s cubic-bezier(0.645, 0.045, 0.355, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--dark);
+            color: var(--light);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Background decoration */
+        .bg-decoration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .bg-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.5;
+        }
+
+        .blob-1 {
+            width: 500px;
+            height: 500px;
+            background: var(--primary);
+            top: -200px;
+            right: -100px;
+            animation: float 15s ease-in-out infinite;
+        }
+
+        .blob-2 {
+            width: 600px;
+            height: 600px;
+            background: var(--secondary);
+            bottom: -300px;
+            left: -200px;
+            animation: float 20s ease-in-out infinite reverse;
+        }
+
+        .blob-3 {
+            width: 300px;
+            height: 300px;
+            background: var(--accent);
+            top: 40%;
+            right: 10%;
+            animation: float 18s ease-in-out infinite 2s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                transform: translateY(-20px) scale(1.05);
+            }
+        }
+
+        /* Main container */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            position: relative;
+        }
+
+        .title {
+            font-size: clamp(28px, 5vw, 48px);
+            font-weight: 800;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 16px;
+            letter-spacing: -1px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .title::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: var(--radius-full);
+            animation: pulse 2s infinite;
+        }
+
+        .subtitle {
+            color: var(--gray-light);
+            font-weight: 400;
+            font-size: 18px;
+            max-width: 600px;
+            margin: 0 auto;
+            opacity: 0;
+            animation: fadeIn 1s ease-out forwards 0.5s;
+        }
+
+        /* Content container */
+        .content-container {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 30px;
+            flex: 1;
+        }
+
+        /* Control panel */
+        .control-panel {
+            background: var(--gray-dark);
+            border-radius: var(--radius-lg);
+            padding: 30px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(127, 90, 240, 0.1);
+            height: fit-content;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUp 0.7s ease-out forwards 0.3s;
+        }
+
+        .control-panel::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(
+                ellipse at center,
+                rgba(127, 90, 240, 0.1) 0%,
+                rgba(0, 0, 0, 0) 70%
+            );
+            transform: translateZ(0);
+            pointer-events: none;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid rgba(148, 161, 178, 0.1);
+            padding-bottom: 16px;
+        }
+
+        .panel-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: var(--radius-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: var(--light);
+            box-shadow: 0 4px 10px rgba(127, 90, 240, 0.3);
+        }
+
+        .panel-title {
+            color: var(--light);
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .error {
+            color: var(--light);
+            padding: 16px;
+            margin: 16px 0;
+            border-radius: var(--radius-md);
+            background: rgba(239, 69, 101, 0.1);
+            border-left: 4px solid var(--error);
+            display: none;
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        .error i {
+            margin-right: 8px;
+            color: var(--error);
+        }
+
+        .control-group {
+            margin-bottom: 24px;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeUp 0.5s ease forwards;
+        }
+
+        .control-group:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .control-group:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        .control-group:nth-child(4) {
+            animation-delay: 0.6s;
+        }
+
+        .control-group:nth-child(5) {
+            animation-delay: 0.8s;
+        }
+
+        .label-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--gray-light);
+            display: flex;
+            align-items: center;
+        }
+
+        .tooltip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: rgba(148, 161, 178, 0.1);
+            margin-left: 8px;
+            font-size: 12px;
+            cursor: help;
+            position: relative;
+        }
+
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            color: var(--light);
+            font-size: 12px;
+            font-weight: normal;
+            white-space: nowrap;
+            z-index: 10;
+            box-shadow: var(--shadow-md);
+        }
+
+        .tooltip:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: var(--primary);
+            z-index: 10;
+        }
+
+        .dimension-inputs {
+            display: flex;
+            gap: 12px;
+        }
+
+        .dimension-inputs .input-wrapper {
+            flex: 1;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-light);
+            font-size: 16px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 14px 14px 14px 40px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(148, 161, 178, 0.2);
+            border-radius: var(--radius-md);
+            color: var(--light);
+            font-size: 14px;
+            font-family: inherit;
+            transition: var(--transition);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+            line-height: 1.5;
+            padding-left: 14px;
+        }
+
+        .textarea-wrapper .input-icon {
+            top: 14px;
+            transform: none;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(127, 90, 240, 0.2);
+            background: rgba(127, 90, 240, 0.05);
+        }
+
+        .helper-text {
+            display: block;
+            font-size: 12px;
+            color: var(--gray-light);
+            margin-top: 6px;
+        }
+
+        .sample-prompt {
+            display: inline-block;
+            background: rgba(127, 90, 240, 0.1);
+            color: var(--primary);
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            margin: 4px 4px 0 0;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .sample-prompt:hover {
+            background: rgba(127, 90, 240, 0.2);
+        }
+
+        .option-btns {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .option-btn {
+            background: none;
+            border: 1px solid rgba(148, 161, 178, 0.3);
+            border-radius: var(--radius-sm);
+            color: var(--gray-light);
+            font-size: 12px;
+            padding: 4px 8px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .option-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--light);
+        }
+
+        .option-btn.active {
+            background: var(--primary);
+            color: var(--light);
+            border-color: var(--primary);
+        }
+
+        #generateBtn {
+            width: 100%;
+            padding: 16px 24px;
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            color: var(--light);
+            font-weight: 600;
+            font-size: 16px;
+            border: none;
+            border-radius: var(--radius-full);
+            margin-top: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        #generateBtn::before {
+            content: "";
+            position: absolute;
+            z-index: -1;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to right, var(--secondary), var(--primary));
+            transform: scaleX(0);
+            transform-origin: 0 50%;
+            transition: transform 0.5s ease-out;
+            border-radius: var(--radius-full);
+        }
+
+        #generateBtn:hover::before {
+            transform: scaleX(1);
+        }
+
+        #generateBtn:hover {
+            box-shadow: 0 6px 15px rgba(127, 90, 240, 0.4);
+            transform: translateY(-2px);
+        }
+
+        #generateBtn:active {
+            transform: translateY(0);
+        }
+
+        #generateBtn:disabled {
+            background: var(--gray-light);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #generateBtn:disabled::before {
+            display: none;
+        }
+
+        #loading {
+            display: none;
+            margin: 16px 0;
+            text-align: center;
+            position: relative;
+            padding: 16px;
+        }
+
+        .loader {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            position: relative;
+        }
+
+        .loader div {
+            box-sizing: border-box;
+            display: block;
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            margin: 4px;
+            border: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: loader 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            border-color: var(--primary) transparent transparent transparent;
+        }
+
+        .loader div:nth-child(1) {
+            animation-delay: -0.45s;
+        }
+
+        .loader div:nth-child(2) {
+            animation-delay: -0.3s;
+        }
+
+        .loader div:nth-child(3) {
+            animation-delay: -0.15s;
+        }
+
+        @keyframes loader {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            display: block;
+            margin-top: 16px;
+            font-weight: 500;
+            color: var(--primary);
+        }
+
+        /* Gallery panel */
+        .gallery-panel {
+            position: relative;
+        }
+
+        .gallery-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUp 0.7s ease-out forwards 0.5s;
+        }
+
+        .gallery-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--light);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .gallery-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary);
+            color: var(--light);
+            font-size: 14px;
+            font-weight: 500;
+            height: 24px;
+            padding: 0 10px;
+            border-radius: var(--radius-full);
+        }
+
+        .gallery-display {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
+        .image-card {
+            position: relative;
+            background: var(--gray-dark);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            transition: var(--transition);
+            box-shadow: var(--shadow-md);
+            opacity: 0;
+            transform: scale(0.95) translateY(20px);
+            animation: scaleIn 0.7s ease-out forwards;
+            border: 1px solid rgba(148, 161, 178, 0.1);
+        }
+
+        .image-card:nth-child(1) {
+            animation-delay: 0.6s;
+        }
+
+        .image-card:nth-child(2) {
+            animation-delay: 0.7s;
+        }
+
+        .image-card:nth-child(3) {
+            animation-delay: 0.8s;
+        }
+
+        .image-card:nth-child(4) {
+            animation-delay: 0.9s;
+        }
+
+        .image-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+            border-color: rgba(127, 90, 240, 0.3);
+        }
+
+        .image-card-header {
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(148, 161, 178, 0.1);
+        }
+
+        .image-card-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--light);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .image-card-title i {
+            color: var(--primary);
+        }
+
+        .image-container {
+            aspect-ratio: 16/9;
+            background: rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .image-placeholder {
+            color: var(--gray-light);
+            font-size: 14px;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .image-card:hover .image-container img {
+            transform: scale(1.05);
+        }
+
+        .image-card-footer {
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-info {
+            font-size: 12px;
+            color: var(--gray-light);
+        }
+
+        .download-btn {
+            background: var(--accent);
+            color: var(--dark);
+            font-weight: 500;
+            font-size: 14px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition);
+            display: none;
+        }
+
+        .download-btn i {
+            font-size: 16px;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(255, 137, 6, 0.3);
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.6;
+                transform: translateX(-50%) scaleX(1);
+            }
+            50% {
+                opacity: 1;
+                transform: translateX(-50%) scaleX(1.1);
+            }
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes shake {
+            10%, 90% {
+                transform: translateX(-1px);
+            }
+            20%, 80% {
+                transform: translateX(2px);
+            }
+            30%, 50%, 70% {
+                transform: translateX(-4px);
+            }
+            40%, 60% {
+                transform: translateX(4px);
+            }
+        }
+
+        /* Image generation effect */
+        .generating {
+            position: relative;
+        }
+
+        .generating::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                rgba(0, 0, 0, 0) 0%, 
+                rgba(127, 90, 240, 0.1) 50%, 
+                rgba(0, 0, 0, 0) 100%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            z-index: 1;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        /* Success indicator */
+        .success-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 80px;
+            height: 80px;
+            background: rgba(44, 182, 125, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--light);
+            font-size: 40px;
+            z-index: 3;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .success .success-icon {
+            animation: successPop 0.5s forwards;
+        }
+
+        @keyframes successPop {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+            70% {
+                transform: translate(-50%, -50%) scale(1.1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px 0;
+            color: var(--gray-light);
+            font-size: 14px;
+            opacity: 0;
+            animation: fadeIn 1s ease forwards 1.2s;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer a:hover {
+            color: var(--accent);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .content-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .gallery-display {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .control-panel {
+                order: 0;
+            }
+            
+            .gallery-panel {
+                order: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 20px 15px;
+            }
+            
+            .gallery-display {
+                grid-template-columns: 1fr;
+            }
+            
+            .dimension-inputs {
+                flex-direction: column;
+                gap: 16px;
+            }
+            
+            .title {
+                font-size: 28px;
+            }
+            
+            .subtitle {
+                font-size: 16px;
+            }
+        }
+
+        /* Dark mode optimization */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #7F5AF0;
+                --primary-dark: #6B47D6;
+                --secondary: #2CB67D;
+                --accent: #FF8906;
+                --light: #FFFFFE;
+                --dark: #16161A;
+                --gray-dark: #242629;
+                --gray-light: #94A1B2;
+            }
+        }
+
+        /* Light mode optimization */
+        @media (prefers-color-scheme: light) {
+            :root {
+                --primary: #6B47D6;
+                --primary-dark: #5A3DC6;
+                --secondary: #2CB67D;
+                --accent: #FF8906;
+                --light: #FFFFFE;
+                --dark: #222525;
+                --gray-dark: #F2F4F8;
+                --gray-light: #72757E;
+            }
+            
+            body {
+                background-color: #F9FAFB;
+                color: var(--dark);
+            }
+            
+            .control-panel {
+                background: var(--light);
+                box-shadow: var(--shadow-md);
+            }
+            
+            .image-card {
+                background: var(--light);
+            }
+            
+            .panel-title, .gallery-title, .image-card-title {
+                color: var(--dark);
+            }
+            
+            input[type="text"],
+            input[type="number"],
+            textarea {
+                background: rgba(0, 0, 0, 0.03);
+                color: var(--dark);
+            }
+
+            input[type="text"]:focus,
+            input[type="number"]:focus,
+            textarea:focus {
+                background: rgba(127, 90, 240, 0.05);
+            }
+            
+            .image-placeholder {
+                color: var(--gray-light);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-decoration">
+        <div class="bg-blob blob-1"></div>
+        <div class="bg-blob blob-2"></div>
+        <div class="bg-blob blob-3"></div>
+    </div>
+    
+    <div class="main-container">
+        <header class="header">
+            <h1 class="title">大鱼AI专属图片生成器</h1>
+            <p class="subtitle">一键创造精美AI图像，释放你的创意潜能</p>
+        </header>
+        
+        <div class="content-container">
+            <!-- 左侧操作面板 -->
+            <div class="control-panel">
+                <div class="panel-header">
+                    <div class="panel-icon"><i class="fas fa-wand-magic-sparkles"></i></div>
+                    <h2 class="panel-title">创作控制台</h2>
+                </div>
+                
+                <div class="error" id="errorMsg"><i class="fas fa-circle-exclamation"></i><span class="error-text"></span></div>
+                
+                <div class="control-group">
+                    <div class="label-wrapper">
+                        <label for="prompt">创意描述 <span class="tooltip" data-tooltip="越详细的描述会产生越精确的图片效果">?</span></label>
+                    </div>
+                    <div class="input-wrapper textarea-wrapper">
+                        <textarea id="prompt" placeholder="请详细描述你想要生成的图片场景、人物、风格或情绪（至少5个字）" required=""></textarea>
+                    </div>
+                    <span class="helper-text">点击添加示例提示词：</span>
+                    <div>
+                        <span class="sample-prompt" onclick="addSamplePrompt(&#39;At the center, a lush Tree of Life emits a faint glow, with its roots spreading and intertwining. Surrounding the tree are lively mythical creatures. A unicorn paces gracefully, a phoenix spreads its wings as if ready to soar, and a spirit snake winds and coils. Fantastical plants dot the surroundings. Their leaves glimmer with fluorescent light, and the flowers exude an otherworldly glow. The base color is pure, scattered across a pastel - colored dreamy sky. The overall color scheme is soft, interweaving pink, blue, and green, creating an ethereal, mysterious, and vibrant atmosphere of a parallel world. The edges of the picture are adorned with exquisite magical runes..&#39;)">魔法生命树</span>
+                        <span class="sample-prompt" onclick="addSamplePrompt(&#39;Imitating Hermès scarves, there is a dreamy flower realm with uniquely shaped flowers. The high-end tones of pink, purple, and blue are intertwined. Ribbons wind around the flowers, and there are delicate French acanthus patterns on the edges.Hermès, an epitome of extravagance, unfurls its resplendent aesthetic. Predominated by the quintessential orange - brown chromatic scheme, a veritable profusion of blossoms—irises with their curvaceous elegance, roses exuding perennial allure, and lilies radiating serene grace—interlace in a luxuriantly - layered assemblage. Each petal is delineated with painstakingly meticulous lines, while the brand iconic lock emblem imparts a tincture of hallowed sophistication.&#39;)">情人花园方巾</span>
+                        <span class="sample-prompt" onclick="addSamplePrompt(&#39;The petals are outlined with fine lines, and it is matched with the brand iconic lock pattern.The Hermes equestrian-themed flower pattern combines galloping horses with flowers. Daisies bloom beside the reins, and the horse hooves step through the flower bushes. There is the outline of a vintage carriage in the background,and the color scheme is a solid color border with a classic background.&#39;)">爱马人士的方巾</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="label-wrapper">
+                        <label for="width">图片尺寸 <span class="tooltip" data-tooltip="选择适合你需要的图片比例和尺寸">?</span></label>
+                    </div>
+                    <div class="dimension-inputs">
+                        <div class="input-wrapper">
+                            <i class="fas fa-arrows-left-right input-icon"></i>
+                            <input type="number" id="width" value="1024" min="100" max="2048" required="">
+                            <span class="helper-text">宽度 (100-2048)</span>
+                        </div>
+                        <div class="input-wrapper">
+                            <i class="fas fa-arrows-up-down input-icon"></i>
+                            <input type="number" id="height" value="1024" min="100" max="2048" required="">
+                            <span class="helper-text">高度 (100-2048)</span>
+                        </div>
+                    </div>
+                    <div class="option-btns">
+                        <button type="button" class="option-btn" onclick="setDimensions(1024, 1024)">1:1 方形</button>
+                        <button type="button" class="option-btn active" onclick="setDimensions(1024, 576)">16:9 横向</button>
+                        <button type="button" class="option-btn" onclick="setDimensions(576, 1024)">9:16 竖向</button>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="label-wrapper">
+                        <label for="seed">随机种子 <span class="tooltip" data-tooltip="相同的种子值会产生相似的图片，可以尝试不同的值获得不同效果">?</span></label>
+                    </div>
+                    <div class="input-wrapper">
+                        <i class="fas fa-dice input-icon"></i>
+                        <input type="number" id="seed" value="100" min="0" required="">
+                    </div>
+                    <div class="option-btns">
+                        <button type="button" class="option-btn" onclick="randomizeSeed()">随机种子</button>
+                    </div>
+                </div>
+                
+                <button id="generateBtn" onclick="generateImages()">
+                    <i class="fas fa-bolt"></i> 生成图片
+                </button>
+                
+                <div id="loading">
+                    <div class="loader">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                    </div>
+                    <span class="loading-text">正在创作精美图片，请稍候...</span>
+                </div>
+            </div>
+            
+            <!-- 右侧图片显示面板 -->
+            <div class="gallery-panel">
+                <div class="gallery-header">
+                    <h2 class="gallery-title">
+                        <i class="fas fa-images"></i> 创作画廊
+                        <span class="gallery-badge">4张</span>
+                    </h2>
+                </div>
+                
+                <div class="gallery-display">
+                    <div class="image-card">
+                        <div class="image-card-header">
+                            <h3 class="image-card-title">
+                                <i class="fas fa-image"></i> 图片 1
+                            </h3>
+                        </div>
+                        <div class="image-container">
+                            <div class="image-placeholder">
+                                <i class="fas fa-mountain-sun" style="font-size: 32px; margin-bottom: 10px; opacity: 0.5;"></i>
+                                <p>点击"生成图片"按钮开始创作</p>
+                            </div>
+                            <img id="generatedImage1" alt="生成的图片1" style="display: none;">
+                            <div class="success-icon"><i class="fas fa-check"></i></div>
+                        </div>
+                        <div class="image-card-footer">
+                            <span class="card-info">尺寸: <span class="dimension-info">1024 x 576</span></span>
+                            <button class="download-btn" id="downloadBtn1" style="display: none;">
+                                <i class="fas fa-download"></i> 下载图片
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="image-card">
+                        <div class="image-card-header">
+                            <h3 class="image-card-title">
+                                <i class="fas fa-image"></i> 图片 2
+                            </h3>
+                        </div>
+                        <div class="image-container">
+                            <div class="image-placeholder">
+                                <i class="fas fa-city" style="font-size: 32px; margin-bottom: 10px; opacity: 0.5;"></i>
+                                <p>点击"生成图片"按钮开始创作</p>
+                            </div>
+                            <img id="generatedImage2" alt="生成的图片2" style="display: none;">
+                            <div class="success-icon"><i class="fas fa-check"></i></div>
+                        </div>
+                        <div class="image-card-footer">
+                            <span class="card-info">尺寸: <span class="dimension-info">1024 x 576</span></span>
+                            <button class="download-btn" id="downloadBtn2" style="display: none;">
+                                <i class="fas fa-download"></i> 下载图片
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="image-card">
+                        <div class="image-card-header">
+                            <h3 class="image-card-title">
+                                <i class="fas fa-image"></i> 图片 3
+                            </h3>
+                        </div>
+                        <div class="image-container">
+                            <div class="image-placeholder">
+                                <i class="fas fa-person-rays" style="font-size: 32px; margin-bottom: 10px; opacity: 0.5;"></i>
+                                <p>点击"生成图片"按钮开始创作</p>
+                            </div>
+                            <img id="generatedImage3" alt="生成的图片3" style="display: none;">
+                            <div class="success-icon"><i class="fas fa-check"></i></div>
+                        </div>
+                        <div class="image-card-footer">
+                            <span class="card-info">尺寸: <span class="dimension-info">1024 x 576</span></span>
+                            <button class="download-btn" id="downloadBtn3" style="display: none;">
+                                <i class="fas fa-download"></i> 下载图片
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="image-card">
+                        <div class="image-card-header">
+                            <h3 class="image-card-title">
+                                <i class="fas fa-image"></i> 图片 4
+                            </h3>
+                        </div>
+                        <div class="image-container">
+                            <div class="image-placeholder">
+                                <i class="fas fa-robot" style="font-size: 32px; margin-bottom: 10px; opacity: 0.5;"></i>
+                                <p>点击"生成图片"按钮开始创作</p>
+                            </div>
+                            <img id="generatedImage4" alt="生成的图片4" style="display: none;">
+                            <div class="success-icon"><i class="fas fa-check"></i></div>
+                        </div>
+                        <div class="image-card-footer">
+                            <span class="card-info">尺寸: <span class="dimension-info">1024 x 576</span></span>
+                            <button class="download-btn" id="downloadBtn4" style="display: none;">
+                                <i class="fas fa-download"></i> 下载图片
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer class="footer">
+            <p>大鱼AI共创营 © 2023 | 高级AI绘图生成器 | 由人工智能提供技术支持</p>
+        </footer>
+    </div>
+    
+    <script>
+        // 页面加载后更新尺寸显示
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDimensionInfo();
+        });
+        
+        // 监听宽高输入变化更新尺寸信息
+        document.getElementById('width').addEventListener('input', updateDimensionInfo);
+        document.getElementById('height').addEventListener('input', updateDimensionInfo);
+        
+        // 更新所有尺寸信息显示
+        function updateDimensionInfo() {
+            const width = document.getElementById('width').value;
+            const height = document.getElementById('height').value;
+            const infoElements = document.querySelectorAll('.dimension-info');
+            
+            infoElements.forEach(el => {
+                el.textContent = `${width} x ${height}`;
+            });
+        }
+        
+        // 设置预设尺寸
+        function setDimensions(width, height) {
+            document.getElementById('width').value = width;
+            document.getElementById('height').value = height;
+            updateDimensionInfo();
+            
+            // 更新按钮状态
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+        
+        // 添加示例提示词
+        function addSamplePrompt(prompt) {
+            const promptTextarea = document.getElementById('prompt');
+            promptTextarea.value = prompt;
+            promptTextarea.focus();
+        }
+        
+        // 随机化种子
+        function randomizeSeed() {
+            const seedInput = document.getElementById('seed');
+            seedInput.value = Math.floor(Math.random() * 1000000);
+        }
+        
+        // 显示错误消息
+        function showError(message) {
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.querySelector('.error-text').textContent = message;
+            errorMsg.style.display = 'block';
+            setTimeout(() => errorMsg.style.display = 'none', 4000);
+        }
+        
+        async function generateImages() {
+            const btn = document.getElementById('generateBtn');
+            const loading = document.getElementById('loading');
+            const errorMsg = document.getElementById('errorMsg');
+            const downloadBtns = [
+                document.getElementById('downloadBtn1'),
+                document.getElementById('downloadBtn2'),
+                document.getElementById('downloadBtn3'),
+                document.getElementById('downloadBtn4')
+            ];
+            const imageCards = document.querySelectorAll('.image-card');
+            
+            try {
+                errorMsg.style.display = 'none';
+                btn.disabled = true;
+                loading.style.display = 'block';
+                
+                // 隐藏所有下载按钮
+                downloadBtns.forEach(btn => btn.style.display = 'none');
+                
+                const prompt = document.getElementById('prompt').value.trim();
+                const widthInput = document.getElementById('width');
+                const heightInput = document.getElementById('height');
+                const seedInput = document.getElementById('seed');
+                
+                if (!prompt || prompt.length < 5) {
+                    showError('提示词至少需要5个字符');
+                    return;
+                }
+                
+                const width = Math.min(Math.max(parseInt(widthInput.value), 100), 2048);
+                const height = Math.min(Math.max(parseInt(heightInput.value), 100), 2048);
+                let seed = parseInt(seedInput.value) || 0;
+                
+                widthInput.value = width;
+                heightInput.value = height;
+                
+                // 更新尺寸信息
+                updateDimensionInfo();
+                
+                // 生成四张图片
+                const imageIds = ['generatedImage1', 'generatedImage2', 'generatedImage3', 'generatedImage4'];
+                
+                for (let i = 0; i < imageCards.length; i++) {
+                    const card = imageCards[i];
+                    const imageEl = document.getElementById(imageIds[i]);
+                    const placeholder = card.querySelector('.image-placeholder');
+                    
+                    // 显示生成中效果
+                    imageEl.style.display = 'none';
+                    placeholder.style.display = 'block';
+                    card.querySelector('.image-container').classList.add('generating');
+                    card.querySelector('.success-icon').style.opacity = '0';
+                }
+                
+                // 顺序加载图片以创造逐步完成的效果
+                for (let i = 0; i < 4; i++) {
+                    seed = ++seed;
+                    seedInput.value = seed;
+                    
+                    const params = new URLSearchParams({
+                        width: width,
+                        height: height,
+                        seed: seed,
+                        model: 'flux',
+                        nologo: true
+                    });
+                    
+                    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?${params}`;
+                    const card = imageCards[i];
+                    const imageEl = document.getElementById(imageIds[i]);
+                    const placeholder = card.querySelector('.image-placeholder');
+                    
+                    try {
+                        // 使用 setTimeout 创造顺序加载效果
+                        await new Promise(resolve => setTimeout(resolve, i * 700));
+                        
+                        await loadImage(imageUrl);
+                        
+                        // 更新UI
+                        imageEl.src = imageUrl;
+                        imageEl.style.display = 'block';
+                        placeholder.style.display = 'none';
+                        card.querySelector('.image-container').classList.remove('generating');
+                        
+                        // 显示成功动画
+                        card.querySelector('.image-container').classList.add('success');
+                        
+                        // 显示下载按钮
+                        downloadBtns[i].style.display = 'flex';
+                        downloadBtns[i].onclick = () => downloadImage(imageUrl, prompt, i + 1);
+                        
+                    } catch (error) {
+                        console.error(`图片${i + 1}生成失败:`, error);
+                        card.querySelector('.image-container').classList.remove('generating');
+                        imageEl.style.display = 'none';
+                        placeholder.style.display = 'block';
+                        placeholder.innerHTML = `<i class="fas fa-exclamation-circle" style="font-size: 32px; margin-bottom: 10px; color: var(--error);"></i><p>图片生成失败，请重试</p>`;
+                    }
+                }
+            } catch (error) {
+                showError(`生成失败: ${error.message}`);
+            } finally {
+                btn.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+        
+        async function downloadImage(url, prompt, index) {
+            try {
+                const downloadBtn = document.getElementById(`downloadBtn${index}`);
+                const originalText = downloadBtn.innerHTML;
+                
+                // 更新按钮状态
+                downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 下载中...';
+                downloadBtn.disabled = true;
+                
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('服务器响应异常');
+                
+                const blob = await response.blob();
+                const filename = generateFileName(prompt, index);
+                
+                const link = document.createElement('a');
+                const objectURL = URL.createObjectURL(blob);
+                
+                link.href = objectURL;
+                link.download = filename;
+                link.style.display = 'none';
+                
+                document.body.appendChild(link);
+                link.click();
+                
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(objectURL);
+                    
+                    // 恢复按钮状态
+                    downloadBtn.innerHTML = originalText;
+                    downloadBtn.disabled = false;
+                }, 100);
+            } catch (error) {
+                showError(`下载失败: ${error.message}`);
+            }
+        }
+        
+        function loadImage(url) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = () => reject(new Error('图片加载失败，请检查网络连接或提示词'));
+                img.src = url;
+            });
+        }
+        
+        function generateFileName(prompt, index) {
+            const cleanPrompt = prompt
+                .substring(0, 30)
+                .replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')
+                .replace(/_+/g, '_');
+            return `AI_${cleanPrompt}_图${index}_${Date.now()}.png`;
+        }
+    </script>
+
+</body></html>
