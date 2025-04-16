@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python单词练习游戏</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f0f3f9;
+        }
+        .game-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .word-card {
+            margin-bottom: 30px;
+        }
+        .phonetic {
+            color: #3498db;
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        .code-example {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+        }
+        #wordInput {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.2em;
+            margin-top: 20px;
+            border: 2px solid #3498db;
+            border-radius: 5px;
+        }
+        .progress {
+            text-align: right;
+            color: #666;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="progress" id="progress">剩余单词：100</div>
+        <div class="word-card">
+            <h1 id="currentWord">Word</h1>
+            <div class="phonetic" id="phonetic">/wɜːd/</div>
+            <div id="translation">中文释义</div>
+            <div class="code-example" id="codeExample">代码示例</div>
+        </div>
+        <input type="text" id="wordInput" placeholder="请输入完整单词..." autofocus>
+		<br><br>
+    <p>Copyright &copy; <a href=index.html>大鱼AI共创营 © 2023</a> |<a href=plan.html>每日学编程英语</a> | 由人工智能提供技术支持</p>
+	</div>
+
+    <script>
+        // 单词数据集（示例数据，需补充完整）
+        const words = [
+            {
+    word: "boolean",
+    phonetic: "/ ˈbuːliən /",
+    translation: "布尔值",
+    code: " is_active = False "
+},
+{
+    word: "string",
+    phonetic: "/ strɪŋ /",
+    translation: "字符串",
+    code: " greeting = 'Hello, Python!' "
+},
+{
+    word: "list",
+    phonetic: "/ lɪst /",
+    translation: "列表",
+    code: " colors = ['red', 'green', 'blue'] "
+},
+{
+    word: "tuple",
+    phonetic: "/ ˈtjuːpəl /",
+    translation: "元组",
+    code: " coordinates = (40.7128, -74.0060) "
+},
+{
+    word: "dict",
+    phonetic: "/ dɪkt /",
+    translation: "字典",
+    code: " person = {'name': 'Alice', 'age': 30} "
+},
+{
+    word: "set",
+    phonetic: "/ set /",
+    translation: "集合",
+    code: " unique_numbers = {1, 2, 3, 3} "
+},
+{
+    word: "frozenset",
+    phonetic: "/ ˈfrəʊzənset /",
+    translation: "不可变集合",
+    code: " frozen = frozenset(['a', 'b', 'c']) "
+},
+{
+    word: "bytes",
+    phonetic: "/ baɪts /",
+    translation: "字节序列",
+    code: " data = b'\\x48\\x65\\x6c\\x6c\\x6f' "
+},
+{
+    word: "bytearray",
+    phonetic: "/ ˈbaɪtəreɪ /",
+    translation: "可变字节序列",
+    code: " mutable_data = bytearray(b'Hello') "
+},
+{
+    word: "none",
+    phonetic: "/ nʌn /",
+    translation: "空值",
+    code: " result = None "
+},
+{
+    word: "range",
+    phonetic: "/ reɪndʒ /",
+    translation: "范围序列",
+    code: " numbers = range(1, 6) "
+},
+{
+    word: "slice",
+    phonetic: "/ slaɪs /",
+    translation: "切片对象",
+    code: " my_slice = slice(0, 10, 2) "
+},
+{
+    word: "iterator",
+    phonetic: "/ ˈɪtəreɪtə /",
+    translation: "迭代器",
+    code: " iter_obj = iter([1, 2, 3]) "
+},
+{
+    word: "generator",
+    phonetic: "/ ˈdʒenəreɪtə /",
+    translation: "生成器",
+    code: " squares = (x**2 for x in range(5)) "
+},
+{
+    word: "enumerate",
+    phonetic: "/ ɪˈnjuːməreɪt /",
+    translation: "枚举函数",
+    code: " for i, item in enumerate(['a', 'b', 'c']): "
+},
+{
+    word: "comprehension",
+    phonetic: "/ ˌkɒmprɪˈhenʃən /",
+    translation: "推导式",
+    code: " squares = [x**2 for x in range(10)] "
+},
+{
+    word: "lambda",
+    phonetic: "/ ˈlæmdə /",
+    translation: "匿名函数",
+    code: " add = lambda x, y: x + y "
+},
+{
+    word: "decorator",
+    phonetic: "/ ˈdekəreɪtə /",
+    translation: "装饰器",
+    code: " @log\ndef my_function(): ... "
+},
+{
+    word: "conditional",
+    phonetic: "/ kənˈdɪʃənəl /",
+    translation: "条件语句",
+    code: " if x > 0: print('Positive') "
+},
+{
+    word: "loop",
+    phonetic: "/ luːp /",
+    translation: "循环",
+    code: " for i in range(3): print(i) "
+},
+{
+    word: "break",
+    phonetic: "/ breɪk /",
+    translation: "循环中断",
+    code: " while True: break "
+},
+{
+    word: "continue",
+    phonetic: "/ kənˈtɪnjuː /",
+    translation: "跳过本次循环",
+    code: " for num in [1,2,3]: if num%2==0: continue "
+},
+{
+    word: "exception",
+    phonetic: "/ ɪkˈsepʃən /",
+    translation: "异常",
+    code: " raise ValueError('Invalid input') "
+},
+{
+    word: "try",
+    phonetic: "/ traɪ /",
+    translation: "异常捕获",
+    code: " try: x = 1/0 except: pass "
+},
+{
+    word: "finally",
+    phonetic: "/ ˈfaɪnəli /",
+    translation: "最终执行块",
+    code: " try: ... finally: print('Done') "
+},
+{
+    word: "raise",
+    phonetic: "/ reɪz /",
+    translation: "抛出异常",
+    code: " raise TypeError('类型错误') "
+},
+{
+    word: "assert",
+    phonetic: "/ əˈsɜːt /",
+    translation: "断言",
+    code: " assert len(lst) > 0, '空列表' "
+},
+{
+    word: "recursion",
+    phonetic: "/ rɪˈkɜːʃən /",
+    translation: "递归",
+    code: " def factorial(n): return n * factorial(n-1) "
+},
+{
+    word: "parameter",
+    phonetic: "/ pəˈræmɪtə /",
+    translation: "形参",
+    code: " def greet(name): ... "
+},
+{
+    word: "argument",
+    phonetic: "/ ˈɑːɡjumənt /",
+    translation: "实参",
+    code: " greet('Alice') "
+},
+{
+    word: "default",
+    phonetic: "/ dɪˈfɔːlt /",
+    translation: "默认参数",
+    code: " def pow(x, n=2): return x**n "
+},
+{
+    word: "keyword",
+    phonetic: "/ ˈkiːwɜːd /",
+    translation: "关键字参数",
+    code: " enroll(name='Bob', age=20) "
+},
+{
+    word: "variable",
+    phonetic: "/ ˈveəriəbəl /",
+    translation: "变量",
+    code: " counter = 0 "
+},
+{
+    word: "scope",
+    phonetic: "/ skəʊp /",
+    translation: "作用域",
+    code: " def func(): local_var = 10 "
+},
+{
+    word: "closure",
+    phonetic: "/ ˈkləʊʒə /",
+    translation: "闭包",
+    code: " def outer(): x=1; def inner(): print(x) "
+},
+{
+    word: "import",
+    phonetic: "/ ɪmˈpɔːt /",
+    translation: "导入模块",
+    code: " import math "
+},
+{
+    word: "module",
+    phonetic: "/ ˈmɒdjuːl /",
+    translation: "模块",
+    code: " from collections import deque "
+},
+{
+    word: "package",
+    phonetic: "/ ˈpækɪdʒ /",
+    translation: "包",
+    code: " import numpy as np "
+},
+{
+    word: "traceback",
+    phonetic: "/ ˈtreɪsbæk /",
+    translation: "堆栈追踪",
+    code: " traceback.print_exc() "
+},
+{
+    word: "debug",
+    phonetic: "/ ˌdiːˈbʌɡ /",
+    translation: "调试",
+    code: " import pdb; pdb.set_trace() "
+},
+{
+    word: "breakpoint",
+    phonetic: "/ ˈbreɪkpɔɪnt /",
+    translation: "断点",
+    code: " breakpoint() "
+},
+{
+    word: "syntax",
+    phonetic: "/ ˈsɪntæks /",
+    translation: "语法",
+    code: " SyntaxError: invalid syntax "
+},
+{
+    word: "indent",
+    phonetic: "/ ɪnˈdent /",
+    translation: "缩进",
+    code: " if True:\n    print('Indented') "
+},
+{
+    word: "attribute",
+    phonetic: "/ əˈtrɪbjuːt /",
+    translation: "属性",
+    code: " class Dog: def __init__(self): self.age = 0 "
+},
+{
+    word: "index",
+    phonetic: "/ ˈɪndeks /",
+    translation: "索引",
+    code: " lst = [10,20]; print(lst[0]) "
+},
+{
+    word: "key",
+    phonetic: "/ kiː /",
+    translation: "字典键",
+    code: " prices = {'apple': 5} "
+},
+{
+    word: "type",
+    phonetic: "/ taɪp /",
+    translation: "类型",
+    code: " print(type(3.14)) "
+},
+{
+    word: "value",
+    phonetic: "/ ˈvæljuː /",
+    translation: "值",
+    code: " x = 'Hello' "
+},
+{
+    word: "stack",
+    phonetic: "/ stæk /",
+    translation: "栈",
+    code: " stack = []; stack.append(1); stack.pop() "
+},
+{
+    word: "log",
+    phonetic: "/ lɒɡ /",
+    translation: "日志记录",
+    code: " import logging; logging.info('msg') "
+},
+{
+    word: "warning",
+    phonetic: "/ ˈwɔːnɪŋ /",
+    translation: "警告",
+    code: " warnings.warn('Deprecated') "
+},
+{
+    word: "handle",
+    phonetic: "/ ˈhændl /",
+    translation: "异常处理",
+    code: " except Exception as e: handle_error(e) "
+},
+{
+    word: "os",
+    phonetic: "/ ˌəʊˈes /",
+    translation: "操作系统接口",
+    code: " import os; os.getcwd() "
+},
+{
+    word: "sys",
+    phonetic: "/ sɪs /",
+    translation: "系统参数",
+    code: " import sys; print(sys.version) "
+},
+{
+    word: "math",
+    phonetic: "/ mæθ /",
+    translation: "数学模块",
+    code: " math.sqrt(16) "
+},
+{
+    word: "datetime",
+    phonetic: "/ ˈdeɪtɪtaɪm /",
+    translation: "日期时间模块",
+    code: " from datetime import datetime "
+},
+{
+    word: "json",
+    phonetic: "/ ˈdʒeɪsən /",
+    translation: "JSON处理",
+    code: " import json; json.dumps({'a':1}) "
+},
+{
+    word: "re",
+    phonetic: "/ ˌɑːrˈiː /",
+    translation: "正则表达式",
+    code: " import re; re.search('^a', 'apple') "
+},
+{
+    word: "random",
+    phonetic: "/ ˈrændəm /",
+    translation: "随机模块",
+    code: " random.randint(1,6) "
+},
+{
+    word: "pickle",
+    phonetic: "/ ˈpɪkəl /",
+    translation: "对象序列化",
+    code: " pickle.dumps(obj) "
+},
+{
+    word: "csv",
+    phonetic: "/ ˌsiːesˈviː /",
+    translation: "CSV文件处理",
+    code: " import csv; reader = csv.reader(f) "
+},
+{
+    word: "logging",
+    phonetic: "/ ˈlɒɡɪŋ /",
+    translation: "日志系统",
+    code: " logging.basicConfig(level=logging.INFO) "
+},
+{
+    word: "unittest",
+    phonetic: "/ ˈjuːnɪttɛst /",
+    translation: "单元测试框架",
+    code: " import unittest; class TestMath(unittest.TestCase): "
+},
+{
+    word: "pytest",
+    phonetic: "/ paɪtest /",
+    translation: "测试框架",
+    code: " pytest.main(['-v', 'test_module.py']) "
+},
+{
+    word: "numpy",
+    phonetic: "/ ˈnʌmpaɪ /",
+    translation: "数值计算库",
+    code: " import numpy as np; arr = np.array([1,2,3]) "
+},
+{
+    word: "pandas",
+    phonetic: "/ ˈpændəz /",
+    translation: "数据分析库",
+    code: " import pandas as pd; df = pd.DataFrame() "
+},
+{
+    word: "matplotlib",
+    phonetic: "/ ˌmætplɒtˈlɪb /",
+    translation: "绘图库",
+    code: " import matplotlib.pyplot as plt; plt.plot([1,2,3]) "
+},
+{
+    word: "requests",
+    phonetic: "/ rɪˈkwɛsts /",
+    translation: "HTTP请求库",
+    code: " response = requests.get('https://api.example.com') "
+},
+{
+    word: "flask",
+    phonetic: "/ flɑːsk /",
+    translation: "Web框架",
+    code: " from flask import Flask; app = Flask(__name__) "
+},
+{
+    word: "django",
+    phonetic: "/ ˈdʒæŋɡəʊ /",
+    translation: "Web框架",
+    code: " django-admin startproject mysite "
+},
+{
+    word: "asyncio",
+    phonetic: "/ əˈsɪŋkioʊ /",
+    translation: "异步IO",
+    code: " async def main(): await asyncio.sleep(1) "
+},
+{
+    word: "threading",
+    phonetic: "/ ˈθredɪŋ /",
+    translation: "线程模块",
+    code: " import threading; t = threading.Thread(target=func) "
+},
+{
+    word: "multiprocessing",
+    phonetic: "/ ˌmʌltiˈprəʊsesɪŋ /",
+    translation: "多进程模块",
+    code: " from multiprocessing import Process "
+},
+{
+    word: "socket",
+    phonetic: "/ ˈsɒkɪt /",
+    translation: "网络套接字",
+    code: " import socket; s = socket.socket() "
+},
+{
+    word: "sqlite3",
+    phonetic: "/ ˌɛskjuːɛlˈlaɪtθriː /",
+    translation: "SQLite数据库",
+    code: " import sqlite3; conn = sqlite3.connect('test.db') "
+},
+{
+    word: "argparse",
+    phonetic: "/ ˈɑːɡpɑːz /",
+    translation: "参数解析",
+    code: " parser = argparse.ArgumentParser() "
+},
+{
+    word: "typing",
+    phonetic: "/ ˈtaɪpɪŋ /",
+    translation: "类型提示",
+    code: " def greet(name: str) -> str: ... "
+},
+{
+    word: "virtualenv",
+    phonetic: "/ ˈvɜːrtʃuəlɛnv /",
+    translation: "虚拟环境",
+    code: " python -m venv myenv "
+},
+{
+    word: "pip",
+    phonetic: "/ pɪp /",
+    translation: "包管理工具",
+    code: " pip install requests "
+},
+{
+    word: "wheel",
+    phonetic: "/ wiːl /",
+    translation: "打包格式",
+    code: " pip install package.whl "
+},
+{
+    word: "setuptools",
+    phonetic: "/ ˈsɛtʌptuːlz /",
+    translation: "打包工具",
+    code: " from setuptools import setup "
+},
+{
+    word: "pdb",
+    phonetic: "/ ˌpiːdiːˈbiː /",
+    translation: "调试器",
+    code: " import pdb; pdb.set_trace() "
+},
+{
+    word: "class",
+    phonetic: "/ klɑːs /",
+    translation: "类",
+    code: " class Car: def __init__(self): ... "
+},
+{
+    word: "object",
+    phonetic: "/ ˈɒbdʒɪkt /",
+    translation: "对象",
+    code: " obj = object() "
+},
+{
+    word: "instance",
+    phonetic: "/ ˈɪnstəns /",
+    translation: "实例",
+    code: " car = Car() "
+},
+{
+    word: "method",
+    phonetic: "/ ˈmeθəd /",
+    translation: "方法",
+    code: " class Dog: def bark(self): ... "
+},
+{
+    word: "attribute",
+    phonetic: "/ əˈtrɪbjuːt /",
+    translation: "类属性",
+    code: " class Circle: pi = 3.14 "
+},
+{
+    word: "inheritance",
+    phonetic: "/ ɪnˈherɪtəns /",
+    translation: "继承",
+    code: " class SubClass(BaseClass): ... "
+},
+{
+    word: "polymorphism",
+    phonetic: "/ ˌpɒlɪˈmɔːfɪzəm /",
+    translation: "多态",
+    code: " def area(shape): return shape.calculate_area() "
+},
+{
+    word: "encapsulation",
+    phonetic: "/ ɪnˌkæpsjʊˈleɪʃən /",
+    translation: "封装",
+    code: " class BankAccount: def __init__(self): self.__balance = 0 "
+},
+{
+    word: "abstraction",
+    phonetic: "/ əbˈstrækʃən /",
+    translation: "抽象",
+    code: " from abc import ABC, abstractmethod "
+},
+{
+    word: "interface",
+    phonetic: "/ ˈɪntəfeɪs /",
+    translation: "接口",
+    code: " class Shape(ABC): @abstractmethod def area(self): ... "
+},
+{
+    word: "constructor",
+    phonetic: "/ kənˈstrʌktə /",
+    translation: "构造方法",
+    code: " def __init__(self, name): self.name = name "
+},
+{
+    word: "destructor",
+    phonetic: "/ dɪˈstrʌktə /",
+    translation: "析构方法",
+    code: " def __del__(self): ... "
+},
+{
+    word: "staticmethod",
+    phonetic: "/ ˈsteɪtɪkˌmeθəd /",
+    translation: "静态方法",
+    code: " @staticmethod\ndef util(): ... "
+},
+{
+    word: "classmethod",
+    phonetic: "/ ˈklɑːsˌmeθəd /",
+    translation: "类方法",
+    code: " @classmethod\ndef create(cls): ... "
+},
+{
+    word: "property",
+    phonetic: "/ ˈprɒpəti /",
+    translation: "属性方法",
+    code: " @property\ndef price(self): return self._price "
+},
+            // 在此补充所有100个单词数据...
+        ];
+
+        let remainingWords = [...words];
+        let currentWord = null;
+
+        function playAudio(word) {
+            const audio = new Audio(`http://dict.youdao.com/dictvoice?type=1&audio=${encodeURIComponent(word)}`);
+            audio.play();
+        }
+
+        function updateProgress() {
+            document.getElementById('progress').textContent = 
+                `剩余单词：${remainingWords.length}`;
+        }
+
+        function showNewWord() {
+            if (remainingWords.length === 0) {
+                alert("恭喜！你已经完成所有单词！");
+                return;
+            }
+
+            const index = Math.floor(Math.random() * remainingWords.length);
+            currentWord = remainingWords[index];
+            
+            document.getElementById('currentWord').textContent = currentWord.word;
+            document.getElementById('phonetic').textContent = currentWord.phonetic;
+            document.getElementById('translation').textContent = currentWord.translation;
+            document.getElementById('codeExample').textContent = currentWord.code;
+            
+            // 播放新单词发音
+            playAudio(currentWord.word);
+        }
+
+        // 初始化游戏
+        function initGame() {
+            remainingWords = [...words];
+            updateProgress();
+            showNewWord();
+            
+            document.getElementById('wordInput').value = '';
+            document.getElementById('wordInput').focus();
+        }
+
+        // 输入验证
+        document.getElementById('wordInput').addEventListener('input', (e) => {
+            const input = e.target.value.trim().toLowerCase();
+            if (input === currentWord.word.toLowerCase()) {
+                // 移除已完成的单词
+                remainingWords = remainingWords.filter(w => w !== currentWord);
+                updateProgress();
+                setTimeout(showNewWord, 500);
+                e.target.value = '';
+            }
+        });
+
+        // 开始游戏
+        initGame();
+    </script>
+</body>
+</html>
