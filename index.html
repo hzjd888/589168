@@ -922,6 +922,108 @@
             }
         }
 
+/* 新增样式 */
+.image-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.image-placeholder {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    background-color: #f5f5f5;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+
+.loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.progress-container {
+    display: none;
+    width: 80%;
+    margin-top: 20px;
+    height: 8px;
+    background-color: #e0e0e0;
+    border-radius: 4px;
+    position: relative;
+}
+
+.progress-bar {
+    height: 100%;
+    background-color: #4a90e2;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    position: absolute;
+    top: -20px;
+    right: 0;
+    font-size: 12px;
+    color: #666;
+}
+
+.error-placeholder {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+}
+
+.retry-btn {
+    margin-top: 15px;
+    padding: 8px 16px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.retry-btn:hover {
+    background-color: #e9ecef;
+}
+
+.generating .loading-spinner {
+    display: flex;
+}
+
+.success .success-icon {
+    opacity: 1 !important;
+}
+
+.success-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(0, 150, 136, 0.8);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    z-index: 2;
+}
+
+
         /* Light mode optimization */
         @media (prefers-color-scheme: light) {
             :root {
@@ -1092,6 +1194,7 @@
                             </button>
                         </div>
                     </div>
+
                     
                     <div class="image-card">
                         <div class="image-card-header">
@@ -1383,6 +1486,9 @@
                 .replace(/_+/g, '_');
             return `AI_${cleanPrompt}_图${index}_${Date.now()}.png`;
         }
+
+
+
     </script>
 
 </body></html>
